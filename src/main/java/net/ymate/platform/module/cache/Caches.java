@@ -140,6 +140,21 @@ public class Caches extends AbstractModule {
     }
 
     /**
+     * 从缓存中获取所有对象
+     *
+     * @param cacheName
+     * @return 返回缓存内对象映射
+     * @throws CacheException
+     */
+    public Map<Object, Object> getAll(String cacheName) throws CacheException {
+        Map<Object, Object> _returnValue = new HashMap();
+        for (Object key : keys(cacheName)) {
+            _returnValue.put(key, get(cacheName, key));
+        }
+        return _returnValue;
+    }
+
+    /**
      * 添加对象到缓存
      *
      * @param cacheName
@@ -235,7 +250,8 @@ public class Caches extends AbstractModule {
         _obj.setAge("123");
         _obj.setName("abc");
         _cache.put("test", "name", _cache.getObjectSerializer().serialize(_obj));
-        System.out.println(_cache.getObjectSerializer().deserialize((byte[])_cache.get("test", "name")));
+        System.out.println(Caches.getInstance().getAll("test").size());
+        //System.out.println(_cache.getObjectSerializer().deserialize((byte[])_cache.get("test", "name")));
         _cache.destroy();
     }
 
