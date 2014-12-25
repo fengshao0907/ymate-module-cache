@@ -72,7 +72,8 @@ public class Caches extends AbstractModule {
         if (!__isInited) {
             initialize(new ICacheConfig() {
                 public ICacheProvider getInternalProviderClass() {
-                    return ClassUtils.impl(StringUtils.defaultIfEmpty(moduleCfgs.get("internal_provider_impl"), __INTERNAL_PROVIDER_CLASS.get("ehcache")), ICacheProvider.class, Caches.class);
+                    String _providerImpl = StringUtils.defaultIfEmpty(moduleCfgs.get("internal_provider_impl"), "ehcache");
+                    return ClassUtils.impl(StringUtils.defaultIfEmpty(__INTERNAL_PROVIDER_CLASS.get(_providerImpl), _providerImpl), ICacheProvider.class, Caches.class);
                 }
 
                 public ICacheProvider getExternalProviderClass() {
