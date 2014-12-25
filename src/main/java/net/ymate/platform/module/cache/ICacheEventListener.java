@@ -15,6 +15,9 @@
  */
 package net.ymate.platform.module.cache;
 
+import net.sf.ehcache.Ehcache;
+import net.sf.ehcache.Element;
+
 /**
  * 缓存事件监听接口定义
  *
@@ -22,4 +25,15 @@ package net.ymate.platform.module.cache;
  * @version 1.0
  */
 public interface ICacheEventListener {
+
+    public void onElementExpired(String cacheName, Object element);
+
+    public void onElementPut(String cacheName, Object element);
+
+    public void onElementRemoved(String cacheName, Object element);
+
+    public void onElementUpdated(String cacheName, Object element);
+
+    public void onRemoveAll(String cacheName);
+
 }

@@ -17,7 +17,9 @@ package net.ymate.platform.module.cache.provider.impl;
 
 import net.sf.ehcache.Cache;
 import net.sf.ehcache.CacheManager;
+import net.sf.ehcache.Ehcache;
 import net.sf.ehcache.Element;
+import net.sf.ehcache.event.CacheEventListener;
 import net.ymate.platform.commons.util.RuntimeUtils;
 import net.ymate.platform.module.cache.CacheException;
 import net.ymate.platform.module.cache.ICache;
@@ -32,9 +34,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author 刘镇 (suninformation@163.com) on 14/10/17
  * @version 1.0
  */
-public class EhCacheProvider implements ICacheProvider {
+public class EhCacheProvider implements ICacheProvider, CacheEventListener {
 
     private CacheManager __CACHE_M = new CacheManager();
+
+    private ICacheEventListener __LISTENER;
 
     private Map<String, ICache> __CACHES;
 
@@ -52,9 +56,12 @@ public class EhCacheProvider implements ICacheProvider {
         if (_cache == null) {
             synchronized (__CACHES) {
                 Cache __cache = __CACHE_M.getCache(name);
+                //
                 if (__cache == null) {
+                    __LISTENER = listener;
                     __CACHE_M.addCache(name);
                     __cache = __CACHE_M.getCache(name);
+                    __cache.getCacheEventNotificationService().registerListener(this);
                 }
                 final Cache __ehcache = __cache;
                 //
@@ -134,6 +141,46 @@ public class EhCacheProvider implements ICacheProvider {
         //
         __CACHE_M.shutdown();
         __CACHE_M = null;
+    }
+
+    public void notifyElementRemoved(Ehcache ehcache, Element element) throws net.sf.ehcache.CacheException {
+        if (__LISTENER != null) {
+            __LISTENER.onElementRemoved(ehcache.getName(), element.getObjectKey());
+        }
+    }
+
+    public void notifyElementPut(Ehcache ehcache, Element element) throws net.sf.ehcache.CacheException {
+        if (__LISTENER != null) {
+            __LISTENER.onElementPut(ehcache.getName(), element.getObjectKey());
+        }
+    }
+
+    public void notifyElementUpdated(Ehcache ehcache, Element element) throws net.sf.ehcache.CacheException {
+        if (__LISTENER != null) {
+            __LISTENER.onElementUpdated(ehcache.getName(), element.getObjectKey());
+        }
+    }
+
+    public void notifyElementExpired(Ehcache ehcache, Element element) {
+        if (__LISTENER != null) {
+            __LISTENER.onElementExpired(ehcache.getName(), element.getObjectKey());
+        }
+    }
+
+    public void notifyElementEvicted(Ehcache ehcache, Element element) {
+    }
+
+    public void notifyRemoveAll(Ehcache ehcache) {
+        if (__LISTENER != null) {
+            __LISTENER.onRemoveAll(ehcache.getName());
+        }
+    }
+
+    public void dispose() {
+    }
+
+    public Object clone() throws CloneNotSupportedException {
+        throw new CloneNotSupportedException();
     }
 
 }

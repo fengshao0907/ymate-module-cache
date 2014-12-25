@@ -15,16 +15,12 @@
  */
 package net.ymate.platform.module.cache;
 
-import net.ymate.platform.base.AbstractModule;
-import net.ymate.platform.commons.util.ClassUtils;
 import net.ymate.platform.module.cache.provider.ICacheProvider;
 import net.ymate.platform.module.cache.provider.impl.EhCacheProvider;
 import net.ymate.platform.module.cache.provider.impl.OSCacheProvider;
 import net.ymate.platform.module.cache.serialize.IObjectSerializer;
 import net.ymate.platform.module.cache.serialize.impl.JavaObjectSerializer;
-import org.apache.commons.lang.StringUtils;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +32,7 @@ import java.util.Map;
  * @author 刘镇 (suninformation@163.com) on 14-10-16
  * @version 1.0
  */
-public class Caches extends AbstractModule {
+public class Caches {
 
     protected static Map<String, String> __SERIALIZER_CLASS = new HashMap<String, String>();
     protected static Map<String, String> __INTERNAL_PROVIDER_CLASS = new HashMap<String, String>();
@@ -67,30 +63,6 @@ public class Caches extends AbstractModule {
         return __current;
     }
 
-    @Override
-    public void initialize(final Map<String, String> moduleCfgs) throws Exception {
-        if (!__isInited) {
-            initialize(new ICacheConfig() {
-                public ICacheProvider getInternalProviderClass() {
-                    String _providerImpl = StringUtils.defaultIfEmpty(moduleCfgs.get("internal_provider_impl"), "ehcache");
-                    return ClassUtils.impl(StringUtils.defaultIfEmpty(__INTERNAL_PROVIDER_CLASS.get(_providerImpl), _providerImpl), ICacheProvider.class, Caches.class);
-                }
-
-                public ICacheProvider getExternalProviderClass() {
-                    return ClassUtils.impl(moduleCfgs.get("external_provider_impl"), ICacheProvider.class, Caches.class);
-                }
-
-                public IObjectSerializer getObjectSerializerClass() {
-                    return ClassUtils.impl(StringUtils.defaultIfEmpty(moduleCfgs.get("serializer_impl"), __SERIALIZER_CLASS.get("java")), IObjectSerializer.class, Caches.class);
-                }
-
-                public ICacheEventListener getCacheEventListenerClass() {
-                    return ClassUtils.impl(moduleCfgs.get("event_listener_impl"), ICacheEventListener.class, Caches.class);
-                }
-            });
-        }
-    }
-
     public void initialize(ICacheConfig config) throws Exception {
         if (!__isInited) {
             __internalCacheProvider = config.getInternalProviderClass();
@@ -110,7 +82,10 @@ public class Caches extends AbstractModule {
         return __objectSerializer;
     }
 
-    @Override
+    public boolean isInited() {
+        return __isInited;
+    }
+
     public void destroy() throws Exception {
         if (__isInited) {
             __isInited = false;
@@ -231,58 +206,6 @@ public class Caches extends AbstractModule {
         ICache _cache = __internalCacheProvider.getCache(cacheName);
         if (_cache != null) {
             _cache.clear();
-        }
-    }
-
-    public static void main(String[] args) throws Exception {
-//        ICacheProvider _cache = new EhCacheProvider(); // OSCacheProvider();
-//        _cache.initialize();
-//        ICache _c = _cache.createCache("test", null);
-//        _c.put("name", "test");
-//        System.out.println(_c.get("name"));
-//        _c.remove("name");
-//        System.out.println(_c.get("name"));
-//        _c.destroy();
-//        _cache.destroy();
-        Caches _cache = Caches.getInstance();
-        _cache.initialize(new HashMap<String, String>());
-        //
-        CacheTestObj _obj = new CacheTestObj();
-        _obj.setAge("123");
-        _obj.setName("abc");
-        _cache.put("test", "name", _cache.getObjectSerializer().serialize(_obj));
-        System.out.println(Caches.getInstance().getAll("test").size());
-        //System.out.println(_cache.getObjectSerializer().deserialize((byte[])_cache.get("test", "name")));
-        _cache.destroy();
-    }
-
-    public static class CacheTestObj implements Serializable {
-        private String name;
-
-        private String age;
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getAge() {
-            return age;
-        }
-
-        public void setAge(String age) {
-            this.age = age;
-        }
-
-        @Override
-        public String toString() {
-            return "CacheTestObj{" +
-                    "name='" + name + '\'' +
-                    ", age='" + age + '\'' +
-                    '}';
         }
     }
 

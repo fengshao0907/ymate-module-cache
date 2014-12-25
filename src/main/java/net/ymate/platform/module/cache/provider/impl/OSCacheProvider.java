@@ -46,7 +46,7 @@ public class OSCacheProvider implements ICacheProvider {
         __CACHES = new ConcurrentHashMap<String, ICache>();
     }
 
-    public ICache createCache(final String name, ICacheEventListener listener) throws CacheException {
+    public ICache createCache(final String name, final ICacheEventListener listener) throws CacheException {
         ICache _cache = __CACHES.get(name);
         if (_cache == null) {
             synchronized (__CACHES) {
@@ -78,6 +78,10 @@ public class OSCacheProvider implements ICacheProvider {
                             __cacheKeys.add(_key);
                         }
                         __oscache.putInCache(_key, value, new ExpiresRefreshPolicy(-1));
+                        //
+                        if (listener != null) {
+                            listener.onElementPut(__name, value);
+                        }
                     }
 
                     public void update(Object key, Object value) throws CacheException {
@@ -91,8 +95,13 @@ public class OSCacheProvider implements ICacheProvider {
                     public void remove(Object key) throws CacheException {
                         String _key = key.toString();
                         if (__cacheKeys.contains(_key)) {
+                            //
+                            if (listener != null) {
+                                listener.onElementRemoved(__name, get(key));
+                            }
                             __cacheKeys.remove(_key);
                             __oscache.cancelUpdate(_key);
+                            //
                             __oscache.removeEntry(_key);
                         }
                     }
@@ -102,6 +111,10 @@ public class OSCacheProvider implements ICacheProvider {
                         for (Object key : keys) {
                             _key.toString();
                             if (__cacheKeys.contains(key)) {
+                                //
+                                if (listener != null) {
+                                    listener.onElementRemoved(__name, get(key));
+                                }
                                 __oscache.cancelUpdate(key.toString());
                                 __oscache.removeEntry(key.toString());
                             }
@@ -111,6 +124,10 @@ public class OSCacheProvider implements ICacheProvider {
                     public void clear() throws CacheException {
                         __cacheKeys.clear();
                         __oscache.flushAll();
+                        //
+                        if (listener != null) {
+                            listener.onRemoveAll(__name);
+                        }
                     }
 
                     public void destroy() throws CacheException {
